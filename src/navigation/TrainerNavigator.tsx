@@ -4,7 +4,20 @@ import TrainerDashboard from '../screens/trainer/TrainerDashboard';
 import TrainerMembers from '../screens/trainer/TrainerMembers';
 import { Ionicons } from '@expo/vector-icons';
 
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import CreateWorkoutScreen from '../screens/trainer/CreateWorkoutScreen';
+
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
+
+const MemberStack = () => {
+    return (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="TrainerMembersList" component={TrainerMembers} />
+            <Stack.Screen name="CreateWorkout" component={CreateWorkoutScreen} />
+        </Stack.Navigator>
+    );
+};
 
 const TrainerNavigator = () => {
     return (
@@ -21,7 +34,7 @@ const TrainerNavigator = () => {
             })}
         >
             <Tab.Screen name="Dashboard" component={TrainerDashboard} />
-            <Tab.Screen name="My Members" component={TrainerMembers} />
+            <Tab.Screen name="My Members" component={MemberStack} />
         </Tab.Navigator>
     );
 };

@@ -6,7 +6,20 @@ import OwnerTrainers from '../screens/owner/OwnerTrainers';
 import OwnerPlans from '../screens/owner/OwnerPlans';
 import { Ionicons } from '@expo/vector-icons';
 
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import AddMemberScreen from '../screens/owner/AddMemberScreen';
+
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
+
+const MemberStack = () => {
+    return (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="OwnerMembersList" component={OwnerMembers} />
+            <Stack.Screen name="AddMember" component={AddMemberScreen} />
+        </Stack.Navigator>
+    );
+};
 
 const OwnerNavigator = () => {
     return (
@@ -25,7 +38,7 @@ const OwnerNavigator = () => {
             })}
         >
             <Tab.Screen name="Dashboard" component={OwnerDashboard} />
-            <Tab.Screen name="Members" component={OwnerMembers} />
+            <Tab.Screen name="Members" component={MemberStack} />
             <Tab.Screen name="Trainers" component={OwnerTrainers} />
             <Tab.Screen name="Plans" component={OwnerPlans} />
         </Tab.Navigator>
