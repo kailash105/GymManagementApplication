@@ -1,9 +1,9 @@
 import React, { useContext, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { AuthContext } from '../../context/AuthContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { MockDatabase } from '../../services/storage';
+import client from '../../api/client';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
@@ -19,12 +19,16 @@ const MemberDashboard = () => {
 
     const loadStats = async () => {
         if (!user) return;
-        const plans = await MockDatabase.getWorkouts(user.id);
-        setStats({
-            streak: 12, // Mock streak
-            weight: 75, // Mock weight
-            workoutsLeft: plans.length,
-        });
+        try {
+            const res = await client.get('/workouts');
+            setStats({
+                streak: 12, // Mock streak
+                weight: 75, // Mock weight
+                workoutsLeft: res.data.length,
+            });
+        } catch (error) {
+            console.error('Failed to load member stats', error);
+        }
     };
 
     useFocusEffect(

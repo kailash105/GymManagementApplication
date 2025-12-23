@@ -4,6 +4,7 @@ import { AuthContext } from '../../context/AuthContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { MockDatabase } from '../../services/storage';
+import client from '../../api/client';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
@@ -17,17 +18,20 @@ const TrainerDashboard = () => {
     });
 
     const loadStats = async () => {
-        // Mock stats for trainer
-        const users = await MockDatabase.getUsers();
-        // In real app, filter by "assigned to me"
-        const members = users.filter(u => u.role === 'MEMBER').length;
+        try {
+            // Mock stats for trainer
+            const usersRes = await client.get('/users');
+            const members = usersRes.data.filter((u: any) => u.role === 'MEMBER').length;
 
-        // Count total workouts (mock global for demo)
-        const workouts = await MockDatabase.getWorkouts();
-        setStats({
-            members,
-            workouts: workouts.length,
-        });
+            // Count total workouts
+            const workoutsRes = await client.get('/workouts');
+            setStats({
+                members,
+                workouts: workoutsRes.data.length,
+            });
+        } catch (error) {
+            console.error("Failed to load stats", error);
+        }
     };
 
     useFocusEffect(

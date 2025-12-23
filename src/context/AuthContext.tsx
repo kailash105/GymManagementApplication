@@ -38,33 +38,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const login = async (email: string, password: string) => {
         setIsLoading(true);
         try {
-            // Mock API call simulation
-            // In production: const response = await client.post('/login', { email, password });
+            const response = await client.post('/auth/login', { email, password });
+            const { token, user } = response.data;
 
-            // MOCK LOGIC for development since no backend exists
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Fake delay
-
-            let mockRole = 'MEMBER';
-            if (email.includes('owner')) mockRole = 'OWNER';
-            if (email.includes('trainer')) mockRole = 'TRAINER';
-
-            const mockResponse: AuthResponse = {
-                token: 'mock-jwt-token-' + Date.now(),
-                user: {
-                    id: 'u-' + Date.now(),
-                    name: email.split('@')[0],
-                    email,
-                    role: mockRole as any,
-                    gym_id: 'gym-001'
-                }
-            };
-
-            await saveToken(mockResponse.token);
-            await saveUser(mockResponse.user);
-            setUser(mockResponse.user);
-
+            await saveToken(token);
+            await saveUser(user);
+            setUser(user);
         } catch (error) {
-            console.error(error);
+            console.error('Login failed', error);
             throw error;
         } finally {
             setIsLoading(false);

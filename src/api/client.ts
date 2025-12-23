@@ -2,7 +2,10 @@ import axios from 'axios';
 import { getToken } from '../utils/storage';
 
 // In a real app, this would be in an environment variable
-const BASE_URL = 'https://api.gymmanager.com/v1';
+// In a real app, this would be in an environment variable
+// For Android Emulator use 'http://10.0.2.2:5001/api'
+// For iOS Simulator use 'http://localhost:5001/api'
+const BASE_URL = 'http://localhost:5001/api';
 
 const client = axios.create({
     baseURL: BASE_URL,
@@ -14,7 +17,7 @@ const client = axios.create({
 client.interceptors.request.use(async (config) => {
     const token = await getToken();
     if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+        config.headers['x-auth-token'] = token;
     }
     return config;
 });

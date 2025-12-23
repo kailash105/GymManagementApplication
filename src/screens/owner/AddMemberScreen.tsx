@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityInd
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MockDatabase } from '../../services/storage';
 import { User } from '../../types';
+import client from '../../api/client';
 import { useNavigation } from '@react-navigation/native';
 
 const AddMemberScreen = () => {
@@ -19,20 +20,18 @@ const AddMemberScreen = () => {
 
         setIsLoading(true);
         try {
-            const newUser: User = {
-                id: Date.now().toString(),
+            await client.post('/users', {
                 name,
                 email,
-                role: 'MEMBER',
-                gym_id: 'gym1', // Hardcoded for single gym demo
-            };
+                role: 'MEMBER'
+            });
 
-            await MockDatabase.addUser(newUser);
             Alert.alert('Success', 'Member added successfully', [
                 { text: 'OK', onPress: () => navigation.goBack() }
             ]);
-        } catch (error) {
-            Alert.alert('Error', 'Failed to add member');
+        } catch (error: any) {
+            console.error(error);
+            Alert.alert('Error', error.response?.data?.msg || 'Failed to add member');
         } finally {
             setIsLoading(false);
         }

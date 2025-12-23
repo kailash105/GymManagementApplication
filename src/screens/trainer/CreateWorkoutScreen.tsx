@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityInd
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MockDatabase } from '../../services/storage';
 import { WorkoutPlan } from '../../types';
+import client from '../../api/client';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
 const CreateWorkoutScreen = () => {
@@ -29,18 +30,16 @@ const CreateWorkoutScreen = () => {
 
         setIsLoading(true);
         try {
-            const newWorkout: WorkoutPlan = {
-                id: Date.now().toString(),
-                member_id: memberId,
-                exercises: exercises,
-                created_at: new Date().toISOString(),
-            };
-
-            await MockDatabase.addWorkout(newWorkout);
+            await client.post('/workouts', {
+                title: `Plan for ${memberName}`,
+                assignedMemberId: memberId,
+                exercises: exercises.map(e => ({ name: e, sets: '3', reps: '10' })), // Formatting simple string to object for now
+            });
             Alert.alert('Success', 'Workout assigned successfully', [
                 { text: 'OK', onPress: () => navigation.goBack() }
             ]);
         } catch (error) {
+            console.error(error);
             Alert.alert('Error', 'Failed to save workout');
         } finally {
             setIsLoading(false);

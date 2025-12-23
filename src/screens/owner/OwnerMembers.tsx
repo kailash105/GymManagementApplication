@@ -3,7 +3,7 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, ActivityIndi
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { User } from '../../types';
-import { MockDatabase } from '../../services/storage';
+import client from '../../api/client';
 
 const OwnerMembers = () => {
     const navigation = useNavigation<any>();
@@ -13,9 +13,9 @@ const OwnerMembers = () => {
     const loadMembers = async () => {
         setIsLoading(true);
         try {
-            const data = await MockDatabase.getUsers();
+            const res = await client.get('/users');
             // Filter only members
-            setMembers(data.filter(u => u.role === 'MEMBER'));
+            setMembers(res.data.filter((u: User) => u.role === 'MEMBER'));
         } catch (error) {
             console.error(error);
             Alert.alert('Error', 'Failed to load members');
@@ -38,7 +38,7 @@ const OwnerMembers = () => {
                 style: 'destructive',
                 onPress: async () => {
                     try {
-                        await MockDatabase.deleteUser(id);
+                        await client.delete(`/users/${id}`);
                         loadMembers();
                     } catch (error) {
                         Alert.alert('Error', 'Failed to delete member');

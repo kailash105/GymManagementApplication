@@ -1,16 +1,32 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { User } from '../../types';
-
-// Dummy data
-const MOCK_TRAINERS: User[] = [
-    { id: 't1', name: 'Mike Tyson', email: 'mike@tyson.com', role: 'TRAINER', gym_id: 'gym1' },
-    { id: 't2', name: 'Muhammad Ali', email: 'ali@great.com', role: 'TRAINER', gym_id: 'gym1' },
-];
+import client from '../../api/client';
+import { useFocusEffect } from '@react-navigation/native';
 
 const OwnerTrainers = () => {
-    const [trainers, setTrainers] = useState<User[]>(MOCK_TRAINERS);
+    const [trainers, setTrainers] = useState<User[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const loadTrainers = async () => {
+        setIsLoading(true);
+        try {
+            const res = await client.get('/users/trainers');
+            setTrainers(res.data);
+        } catch (error) {
+            console.error(error);
+            Alert.alert('Error', 'Failed to load trainers');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useFocusEffect(
+        useCallback(() => {
+            loadTrainers();
+        }, [])
+    );
 
     return (
         <SafeAreaView style={styles.container}>
@@ -21,18 +37,23 @@ const OwnerTrainers = () => {
                 </TouchableOpacity>
             </View>
 
-            <FlatList
-                data={trainers}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <View style={styles.card}>
-                        <Text style={styles.name}>{item.name}</Text>
-                        <Text style={styles.email}>{item.email}</Text>
-                        <Text style={styles.subtext}>Active</Text>
-                    </View>
-                )}
-                contentContainerStyle={styles.list}
-            />
+            {isLoading ? (
+                <ActivityIndicator size="large" style={{ marginTop: 20 }} />
+            ) : (
+                <FlatList
+                    data={trainers}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => (
+                        <View style={styles.card}>
+                            <Text style={styles.name}>{item.name}</Text>
+                            <Text style={styles.email}>{item.email}</Text>
+                            <Text style={styles.subtext}>Active</Text>
+                        </View>
+                    )}
+                    contentContainerStyle={styles.list}
+                    ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 20, color: '#666' }}>No trainers found.</Text>}
+                />
+            )}
         </SafeAreaView>
     );
 };

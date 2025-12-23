@@ -1,33 +1,57 @@
-import React from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, FlatList, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SubscriptionPlan } from '../../types';
-
-const MOCK_PLANS: SubscriptionPlan[] = [
-    { id: 'p1', name: 'Monthly Basic', duration: 'MONTHLY', price: 29.99 },
-    { id: 'p2', name: 'Yearly Pro', duration: 'YEARLY', price: 299.99 },
-];
+import client from '../../api/client';
+import { useFocusEffect } from '@react-navigation/native';
 
 const OwnerPlans = () => {
+    const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const loadPlans = async () => {
+        setIsLoading(true);
+        try {
+            const res = await client.get('/plans');
+            setPlans(res.data);
+        } catch (error) {
+            console.error(error);
+            Alert.alert('Error', 'Failed to load plans');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useFocusEffect(
+        useCallback(() => {
+            loadPlans();
+        }, [])
+    );
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.title}>Subscription Plans</Text>
             </View>
-            <FlatList
-                data={MOCK_PLANS}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <View style={styles.card}>
-                        <View>
-                            <Text style={styles.planName}>{item.name}</Text>
-                            <Text style={styles.planDuration}>{item.duration}</Text>
+            {isLoading ? (
+                <ActivityIndicator size="large" style={{ marginTop: 20 }} />
+            ) : (
+                <FlatList
+                    data={plans}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => (
+                        <View style={styles.card}>
+                            <View>
+                                <Text style={styles.planName}>{item.name}</Text>
+                                <Text style={styles.planDuration}>{item.duration} Months</Text>
+                            </View>
+                            <Text style={styles.price}>${item.price}</Text>
                         </View>
-                        <Text style={styles.price}>${item.price}</Text>
-                    </View>
-                )}
-                contentContainerStyle={styles.list}
-            />
+                    )}
+                    contentContainerStyle={styles.list}
+                    ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 20, color: '#666' }}>No plans found.</Text>}
+                />
+            )}
         </SafeAreaView>
     );
 };
