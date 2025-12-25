@@ -1,16 +1,18 @@
 import React, { useContext, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { View, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { AuthContext } from '../../context/AuthContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Text, Card, Button, Avatar, IconButton, useTheme, Surface } from 'react-native-paper';
 import client from '../../api/client';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
 const MemberDashboard = () => {
     const { logout, user } = useContext(AuthContext);
     const navigation = useNavigation<any>();
+    const theme = useTheme();
     const [stats, setStats] = useState({
         streak: 12,
         weight: 75,
@@ -38,79 +40,98 @@ const MemberDashboard = () => {
     );
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 {/* Header */}
                 <View style={styles.header}>
                     <View>
-                        <Text style={styles.greeting}>Welcome Back,</Text>
-                        <Text style={styles.userName}>{user?.name}</Text>
+                        <Text variant="bodyMedium" style={{ color: theme.colors.secondary }}>Welcome Back,</Text>
+                        <Text variant="headlineMedium" style={{ fontWeight: 'bold' }}>{user?.name}</Text>
                     </View>
-                    <TouchableOpacity style={styles.profileBtn} onPress={logout}>
-                        <Ionicons name="log-out-outline" size={24} color="#FF3B30" />
-                    </TouchableOpacity>
+                    <IconButton
+                        icon="logout"
+                        iconColor={theme.colors.error}
+                        size={24}
+                        onPress={logout}
+                        mode="contained"
+                        containerColor={theme.colors.surface}
+                    />
                 </View>
 
                 {/* Hero / Next Workout */}
-                <View style={styles.heroCard}>
-                    <View style={styles.heroContent}>
-                        <View style={styles.heroTag}>
+                <Card style={[styles.heroCard, { backgroundColor: '#1E1E1E' }]} mode="elevated">
+                    <Card.Content>
+                        <Surface style={styles.heroTag} elevation={0}>
                             <Text style={styles.heroTagText}>TODAY'S GOAL</Text>
-                        </View>
-                        <Text style={styles.heroTitle}>Upper Body Power</Text>
-                        <Text style={styles.heroSubtitle}>45 mins • Intermediate</Text>
-                        <TouchableOpacity style={styles.startBtn} onPress={() => navigation.navigate('My Plan')}>
-                            <Text style={styles.startBtnText}>Start Workout</Text>
-                        </TouchableOpacity>
-                    </View>
-                    {/* Abstract decorative circles */}
-                    <View style={[styles.circle, { top: -20, right: -20, width: 100, height: 100 }]} />
-                    <View style={[styles.circle, { bottom: -40, right: 40, width: 80, height: 80 }]} />
-                </View>
+                        </Surface>
+                        <Text variant="headlineSmall" style={styles.heroTitle}>Upper Body Power</Text>
+                        <Text variant="bodyMedium" style={styles.heroSubtitle}>45 mins • Intermediate</Text>
+                        <Button
+                            mode="contained-tonal"
+                            onPress={() => navigation.navigate('My Plan')}
+                            style={styles.startBtn}
+                            labelStyle={{ color: '#1E1E1E', fontWeight: 'bold' }}
+                        >
+                            Start Workout
+                        </Button>
+                    </Card.Content>
+                    {/* Decorative circles would go here if needed, keeping simple for now */}
+                </Card>
 
                 {/* Tracking Grid */}
-                <Text style={styles.sectionTitle}>Your Progress</Text>
+                <Text variant="titleLarge" style={styles.sectionTitle}>Your Progress</Text>
                 <View style={styles.gridContainer}>
-                    <View style={styles.gridCard}>
-                        <Ionicons name="flame" size={32} color="#FF9800" style={{ marginBottom: 8 }} />
-                        <Text style={styles.gridValue}>{stats.streak}</Text>
-                        <Text style={styles.gridLabel}>Day Streak</Text>
-                    </View>
-                    <View style={styles.gridCard}>
-                        <Ionicons name="scale" size={32} color="#4CAF50" style={{ marginBottom: 8 }} />
-                        <Text style={styles.gridValue}>{stats.weight}kg</Text>
-                        <Text style={styles.gridLabel}>Current Weight</Text>
-                    </View>
-                    <View style={styles.gridCard}>
-                        <Ionicons name="barbell" size={32} color="#2196F3" style={{ marginBottom: 8 }} />
-                        <Text style={styles.gridValue}>{stats.workoutsLeft}</Text>
-                        <Text style={styles.gridLabel}>Plans Assigned</Text>
-                    </View>
+                    <Card style={styles.gridCard} mode="contained">
+                        <Card.Content style={styles.gridContent}>
+                            <MaterialCommunityIcons name="fire" size={32} color="#FF9800" />
+                            <Text variant="headlineSmall" style={styles.gridValue}>{stats.streak}</Text>
+                            <Text variant="bodySmall" style={styles.gridLabel}>Day Streak</Text>
+                        </Card.Content>
+                    </Card>
+                    <Card style={styles.gridCard} mode="contained">
+                        <Card.Content style={styles.gridContent}>
+                            <MaterialCommunityIcons name="scale" size={32} color="#4CAF50" />
+                            <Text variant="headlineSmall" style={styles.gridValue}>{stats.weight}kg</Text>
+                            <Text variant="bodySmall" style={styles.gridLabel}>Weight</Text>
+                        </Card.Content>
+                    </Card>
+                    <Card style={styles.gridCard} mode="contained">
+                        <Card.Content style={styles.gridContent}>
+                            <MaterialCommunityIcons name="dumbbell" size={32} color="#2196F3" />
+                            <Text variant="headlineSmall" style={styles.gridValue}>{stats.workoutsLeft}</Text>
+                            <Text variant="bodySmall" style={styles.gridLabel}>Plans</Text>
+                        </Card.Content>
+                    </Card>
                 </View>
 
                 {/* Recent History / Action */}
-                <Text style={styles.sectionTitle}>Quick Actions</Text>
-                <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('My Plan')}>
-                    <View style={[styles.iconBox, { backgroundColor: '#E3F2FD' }]}>
-                        <Ionicons name="list" size={24} color="#007AFF" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                        <Text style={styles.actionTitle}>View All Plans</Text>
-                        <Text style={styles.actionSubtitle}>Check your assigned routines</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={20} color="#ccc" />
-                </TouchableOpacity>
+                <Text variant="titleLarge" style={styles.sectionTitle}>Quick Actions</Text>
 
-                <TouchableOpacity style={styles.actionCard}>
-                    <View style={[styles.iconBox, { backgroundColor: '#FFEBEE' }]}>
-                        <Ionicons name="heart" size={24} color="#F44336" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                        <Text style={styles.actionTitle}>Log Health Data</Text>
-                        <Text style={styles.actionSubtitle}>Update your weight & stats</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={20} color="#ccc" />
-                </TouchableOpacity>
+                <Card
+                    style={styles.actionCard}
+                    mode="elevated"
+                    onPress={() => navigation.navigate('My Plan')}
+                >
+                    <Card.Title
+                        title="View All Plans"
+                        subtitle="Check your assigned routines"
+                        left={(props) => <Avatar.Icon {...props} icon="format-list-bulleted" style={{ backgroundColor: '#E3F2FD' }} color="#007AFF" size={40} />}
+                        right={(props) => <IconButton {...props} icon="chevron-right" />}
+                    />
+                </Card>
+
+                <Card
+                    style={styles.actionCard}
+                    mode="elevated"
+                    onPress={() => { }}
+                >
+                    <Card.Title
+                        title="Log Health Data"
+                        subtitle="Update your weight & stats"
+                        left={(props) => <Avatar.Icon {...props} icon="heart" style={{ backgroundColor: '#FFEBEE' }} color="#F44336" size={40} />}
+                        right={(props) => <IconButton {...props} icon="chevron-right" />}
+                    />
+                </Card>
 
             </ScrollView>
         </SafeAreaView>
@@ -120,7 +141,6 @@ const MemberDashboard = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F7F8FA',
     },
     scrollContent: {
         padding: 24,
@@ -131,50 +151,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 32,
     },
-    greeting: {
-        fontSize: 16,
-        color: '#8E8E93',
-        marginBottom: 4,
-    },
-    userName: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#1C1C1E',
-    },
-    profileBtn: {
-        padding: 8,
-        borderRadius: 12,
-        backgroundColor: '#fff',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 2,
-    },
     heroCard: {
-        backgroundColor: '#1E1E1E',
-        borderRadius: 24,
-        padding: 24,
         marginBottom: 32,
-        position: 'relative',
-        overflow: 'hidden',
-        height: 180,
-        justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.3,
-        shadowRadius: 16,
-        elevation: 8,
-    },
-    heroContent: {
-        zIndex: 1,
-        alignItems: 'flex-start',
+        padding: 8,
     },
     heroTag: {
         backgroundColor: '#34C759',
         paddingHorizontal: 8,
         paddingVertical: 4,
         borderRadius: 8,
+        alignSelf: 'flex-start',
         marginBottom: 12,
     },
     heroTagText: {
@@ -184,35 +170,20 @@ const styles = StyleSheet.create({
     },
     heroTitle: {
         color: '#fff',
-        fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 4,
     },
     heroSubtitle: {
         color: '#8E8E93',
-        fontSize: 14,
         marginBottom: 16,
     },
     startBtn: {
         backgroundColor: '#fff',
-        paddingHorizontal: 20,
-        paddingVertical: 10,
-        borderRadius: 20,
-    },
-    startBtnText: {
-        color: '#1E1E1E',
-        fontWeight: 'bold',
-        fontSize: 14,
-    },
-    circle: {
-        position: 'absolute',
-        backgroundColor: 'rgba(255,255,255,0.05)',
-        borderRadius: 50,
+        borderRadius: 10,
+        alignSelf: 'flex-start',
     },
     sectionTitle: {
-        fontSize: 18,
         fontWeight: 'bold',
-        color: '#1C1C1E',
         marginBottom: 16,
     },
     gridContainer: {
@@ -221,58 +192,24 @@ const styles = StyleSheet.create({
         marginBottom: 32,
     },
     gridCard: {
-        backgroundColor: '#fff',
-        width: (width - 48 - 24) / 3, // 3 columns
-        padding: 16,
-        borderRadius: 20,
+        width: (width - 48 - 16) / 3,
         alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 3,
+    },
+    gridContent: {
+        alignItems: 'center',
+        padding: 8,
     },
     gridValue: {
-        fontSize: 20,
         fontWeight: 'bold',
-        color: '#1C1C1E',
-        marginBottom: 4,
+        marginTop: 8,
     },
     gridLabel: {
-        fontSize: 12,
         color: '#8E8E93',
         textAlign: 'center',
     },
     actionCard: {
-        backgroundColor: '#fff',
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 16,
-        borderRadius: 20,
         marginBottom: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    iconBox: {
-        width: 48,
-        height: 48,
-        borderRadius: 14,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 16,
-    },
-    actionTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#1C1C1E',
-        marginBottom: 2,
-    },
-    actionSubtitle: {
-        fontSize: 14,
-        color: '#8E8E93',
+        backgroundColor: '#fff',
     },
 });
 

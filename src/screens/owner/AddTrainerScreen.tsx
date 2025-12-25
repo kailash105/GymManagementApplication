@@ -5,7 +5,7 @@ import client from '../../api/client';
 import { useNavigation } from '@react-navigation/native';
 import { TextInput, Button, Appbar, useTheme, HelperText } from 'react-native-paper';
 
-const AddMemberScreen = () => {
+const AddTrainerScreen = () => {
     const navigation = useNavigation();
     const theme = useTheme();
     const [name, setName] = useState('');
@@ -23,15 +23,15 @@ const AddMemberScreen = () => {
             await client.post('/users', {
                 name,
                 email,
-                role: 'MEMBER'
+                role: 'TRAINER'
             });
 
-            Alert.alert('Success', 'Member added successfully', [
+            Alert.alert('Success', 'Trainer added successfully', [
                 { text: 'OK', onPress: () => navigation.goBack() }
             ]);
         } catch (error: any) {
             console.error(error);
-            Alert.alert('Error', error.response?.data?.msg || 'Failed to add member');
+            Alert.alert('Error', error.response?.data?.msg || 'Failed to add trainer');
         } finally {
             setIsLoading(false);
         }
@@ -41,14 +41,14 @@ const AddMemberScreen = () => {
         <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <Appbar.Header>
                 <Appbar.BackAction onPress={() => navigation.goBack()} />
-                <Appbar.Content title="Add New Member" />
+                <Appbar.Content title="Add New Trainer" />
             </Appbar.Header>
 
             <View style={styles.form}>
                 <TextInput
                     mode="outlined"
                     label="Full Name"
-                    placeholder="John Doe"
+                    placeholder="Jane Doe"
                     value={name}
                     onChangeText={setName}
                     style={styles.input}
@@ -57,7 +57,7 @@ const AddMemberScreen = () => {
                 <TextInput
                     mode="outlined"
                     label="Email Address"
-                    placeholder="john@example.com"
+                    placeholder="jane@fitness.com"
                     keyboardType="email-address"
                     autoCapitalize="none"
                     value={email}
@@ -76,7 +76,7 @@ const AddMemberScreen = () => {
                     disabled={isLoading}
                     style={styles.saveButton}
                 >
-                    Save Member
+                    Save Trainer
                 </Button>
             </View>
         </SafeAreaView>
@@ -99,4 +99,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default AddMemberScreen;
+export default AddTrainerScreen;

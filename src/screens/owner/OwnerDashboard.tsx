@@ -1,21 +1,26 @@
 import React, { useContext, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { View, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { AuthContext } from '../../context/AuthContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Text, Card, Avatar, IconButton, useTheme, Surface, Button, Banner, List } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { MockDatabase } from '../../services/storage';
+import client from '../../api/client';
 
 const { width } = Dimensions.get('window');
 
 const OwnerDashboard = () => {
     const { logout, user } = useContext(AuthContext);
     const navigation = useNavigation<any>();
+    const theme = useTheme();
     const [stats, setStats] = useState({
         members: 0,
         trainers: 0,
         revenue: 0,
     });
+    const [alerts, setAlerts] = useState<any[]>([]);
+    const [bannerVisible, setBannerVisible] = useState(true);
 
     const loadStats = async () => {
         const users = await MockDatabase.getUsers();
@@ -28,81 +33,151 @@ const OwnerDashboard = () => {
         });
     };
 
+    const loadAlerts = async () => {
+        try {
+            const res = await client.get('/alerts');
+            setAlerts(res.data);
+            setBannerVisible(res.data.length > 0);
+        } catch (error) {
+            console.error('Failed to load alerts', error);
+        }
+    };
+
     useFocusEffect(
         useCallback(() => {
             loadStats();
+            loadAlerts();
         }, [])
     );
 
+    const urgentAlert = alerts.find(a => a.type === 'warning' || a.type === 'error');
+
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 {/* Header */}
                 <View style={styles.header}>
                     <View>
-                        <Text style={styles.greeting}>Good Morning,</Text>
-                        <Text style={styles.userName}>{user?.name}</Text>
+                        <Text variant="bodyMedium" style={{ color: theme.colors.secondary }}>Good Morning,</Text>
+                        <Text variant="headlineMedium" style={{ fontWeight: 'bold' }}>{user?.name}</Text>
                     </View>
-                    <TouchableOpacity style={styles.profileBtn} onPress={logout}>
-                        <Ionicons name="log-out-outline" size={24} color="#FF3B30" />
-                    </TouchableOpacity>
+                    <IconButton
+                        icon="logout"
+                        iconColor={theme.colors.error}
+                        size={24}
+                        onPress={logout}
+                        mode="contained"
+                        containerColor={theme.colors.surface}
+                    />
                 </View>
 
+                {urgentAlert && (
+                    <Banner
+                        visible={bannerVisible}
+                        actions={[
+                            {
+                                label: 'Dismiss',
+                                onPress: () => setBannerVisible(false),
+                            },
+                            {
+                                label: 'View Details',
+                                onPress: () => { /* Navigate to alert details */ },
+                            },
+                        ]}
+                        icon={({ size }) => (
+                            <MaterialCommunityIcons name="alert-circle" size={size} color={theme.colors.error} />
+                        )}
+                        style={styles.banner}
+                    >
+                        {urgentAlert.message}
+                    </Banner>
+                )}
+
                 {/* Main Stats Card */}
-                <View style={styles.revenueCard}>
-                    <Text style={styles.revenueTitle}>Total Revenue</Text>
-                    <Text style={styles.revenueValue}>${stats.revenue.toLocaleString()}</Text>
-                    <View style={styles.revenueBadge}>
-                        <Ionicons name="trending-up" size={16} color="#4CD964" />
-                        <Text style={styles.revenueBadgeText}>+12.5% this month</Text>
-                    </View>
-                </View>
+                <Card style={[styles.revenueCard, { backgroundColor: '#1C1C1E' }]} mode="elevated">
+                    <Card.Content>
+                        <Text variant="bodyMedium" style={styles.revenueTitle}>Total Revenue</Text>
+                        <Text variant="displayMedium" style={styles.revenueValue}>${stats.revenue.toLocaleString()}</Text>
+                        <Surface style={styles.revenueBadge} elevation={0}>
+                            <MaterialCommunityIcons name="trending-up" size={16} color="#4CD964" />
+                            <Text variant="labelSmall" style={styles.revenueBadgeText}>+12.5% this month</Text>
+                        </Surface>
+                    </Card.Content>
+                </Card>
 
                 {/* Grid Stats */}
                 <View style={styles.gridContainer}>
-                    <View style={styles.gridCard}>
-                        <View style={[styles.iconContainer, { backgroundColor: '#E3F2FD' }]}>
-                            <Ionicons name="people" size={24} color="#007AFF" />
-                        </View>
-                        <Text style={styles.gridValue}>{stats.members}</Text>
-                        <Text style={styles.gridLabel}>Active Members</Text>
-                    </View>
-                    <View style={styles.gridCard}>
-                        <View style={[styles.iconContainer, { backgroundColor: '#FFF3E0' }]}>
-                            <Ionicons name="barbell" size={24} color="#FF9800" />
-                        </View>
-                        <Text style={styles.gridValue}>{stats.trainers}</Text>
-                        <Text style={styles.gridLabel}>Trainers</Text>
-                    </View>
+                    <Card style={styles.gridCard} mode="contained">
+                        <Card.Content style={styles.gridContent}>
+                            <Avatar.Icon size={48} icon="account-group" style={{ backgroundColor: '#E3F2FD' }} color="#007AFF" />
+                            <Text variant="headlineSmall" style={styles.gridValue}>{stats.members}</Text>
+                            <Text variant="bodySmall" style={styles.gridLabel}>Active Members</Text>
+                        </Card.Content>
+                    </Card>
+                    <Card style={styles.gridCard} mode="contained">
+                        <Card.Content style={styles.gridContent}>
+                            <Avatar.Icon size={48} icon="dumbbell" style={{ backgroundColor: '#FFF3E0' }} color="#FF9800" />
+                            <Text variant="headlineSmall" style={styles.gridValue}>{stats.trainers}</Text>
+                            <Text variant="bodySmall" style={styles.gridLabel}>Trainers</Text>
+                        </Card.Content>
+                    </Card>
                 </View>
 
                 {/* Quick Actions */}
-                <Text style={styles.sectionTitle}>Quick Actions</Text>
+                <Text variant="titleLarge" style={styles.sectionTitle}>Quick Actions</Text>
                 <View style={styles.actionRow}>
-                    <TouchableOpacity
-                        style={styles.actionButton}
+                    <Button
+                        mode="elevated"
                         onPress={() => navigation.navigate('Members', { screen: 'AddMember' })}
+                        style={styles.actionButton}
+                        contentStyle={styles.actionButtonContent}
                     >
-                        <View style={[styles.actionIcon, { backgroundColor: '#E8F5E9' }]}>
-                            <Ionicons name="person-add" size={24} color="#4CAF50" />
+                        <View style={{ alignItems: 'center' }}>
+                            <Avatar.Icon size={48} icon="account-plus" style={{ backgroundColor: '#E8F5E9', marginBottom: 8 }} color="#4CAF50" />
+                            <Text variant="labelMedium">Add Member</Text>
                         </View>
-                        <Text style={styles.actionText}>Add Member</Text>
-                    </TouchableOpacity>
+                    </Button>
 
-                    <TouchableOpacity style={styles.actionButton}>
-                        <View style={[styles.actionIcon, { backgroundColor: '#F3E5F5' }]}>
-                            <Ionicons name="document-text" size={24} color="#9C27B0" />
+                    <Button
+                        mode="elevated"
+                        onPress={() => navigation.navigate('Reports')}
+                        style={styles.actionButton}
+                        contentStyle={styles.actionButtonContent}
+                    >
+                        <View style={{ alignItems: 'center' }}>
+                            <Avatar.Icon size={48} icon="file-document" style={{ backgroundColor: '#F3E5F5', marginBottom: 8 }} color="#9C27B0" />
+                            <Text variant="labelMedium">Reports</Text>
                         </View>
-                        <Text style={styles.actionText}>Reports</Text>
-                    </TouchableOpacity>
+                    </Button>
 
-                    <TouchableOpacity style={styles.actionButton}>
-                        <View style={[styles.actionIcon, { backgroundColor: '#FFEBEE' }]}>
-                            <Ionicons name="notifications" size={24} color="#F44336" />
+                    <Button
+                        mode="elevated"
+                        onPress={() => { /* Toggle alerts modal/view */ }}
+                        style={styles.actionButton}
+                        contentStyle={styles.actionButtonContent}
+                    >
+                        <View style={{ alignItems: 'center' }}>
+                            <Avatar.Icon size={48} icon="bell" style={{ backgroundColor: '#FFEBEE', marginBottom: 8 }} color="#F44336" />
+                            <Text variant="labelMedium">Alerts</Text>
                         </View>
-                        <Text style={styles.actionText}>Alerts</Text>
-                    </TouchableOpacity>
+                    </Button>
                 </View>
+
+                {/* Recent Alerts List */}
+                {alerts.length > 0 && (
+                    <View style={styles.alertsContainer}>
+                        <Text variant="titleLarge" style={styles.sectionTitle}>Recent Activities</Text>
+                        {alerts.map((alert) => (
+                            <Card key={alert.id} style={styles.alertCard} mode="outlined">
+                                <Card.Title
+                                    title={alert.title}
+                                    subtitle={alert.message}
+                                    left={(props) => <Avatar.Icon {...props} icon="information" size={40} style={{ backgroundColor: theme.colors.surfaceVariant }} />}
+                                />
+                            </Card>
+                        ))}
+                    </View>
+                )}
 
             </ScrollView>
         </SafeAreaView>
@@ -112,7 +187,6 @@ const OwnerDashboard = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F7F8FA',
     },
     scrollContent: {
         padding: 24,
@@ -123,45 +197,21 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 32,
     },
-    greeting: {
-        fontSize: 16,
-        color: '#8E8E93',
-        marginBottom: 4,
-    },
-    userName: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#1C1C1E',
-    },
-    profileBtn: {
-        padding: 8,
-        borderRadius: 12,
-        backgroundColor: '#fff',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 2,
+    banner: {
+        marginBottom: 16,
+        borderRadius: 8,
+        overflow: 'hidden',
     },
     revenueCard: {
-        backgroundColor: '#1C1C1E',
         borderRadius: 24,
-        padding: 24,
         marginBottom: 24,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.15,
-        shadowRadius: 16,
-        elevation: 8,
     },
     revenueTitle: {
         color: '#8E8E93',
-        fontSize: 14,
         marginBottom: 8,
     },
     revenueValue: {
         color: '#fff',
-        fontSize: 36,
         fontWeight: 'bold',
         marginBottom: 16,
     },
@@ -178,7 +228,6 @@ const styles = StyleSheet.create({
         color: '#4CD964',
         marginLeft: 4,
         fontWeight: '600',
-        fontSize: 12,
     },
     gridContainer: {
         flexDirection: 'row',
@@ -186,66 +235,46 @@ const styles = StyleSheet.create({
         marginBottom: 32,
     },
     gridCard: {
-        backgroundColor: '#fff',
         width: (width - 48 - 16) / 2,
-        padding: 16,
-        borderRadius: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 3,
     },
-    iconContainer: {
-        width: 48,
-        height: 48,
-        borderRadius: 14,
-        justifyContent: 'center',
+    gridContent: {
         alignItems: 'center',
-        marginBottom: 12,
+        padding: 16,
     },
     gridValue: {
-        fontSize: 24,
         fontWeight: 'bold',
-        color: '#1C1C1E',
+        marginTop: 12,
         marginBottom: 4,
     },
     gridLabel: {
-        fontSize: 14,
         color: '#8E8E93',
     },
     sectionTitle: {
-        fontSize: 18,
         fontWeight: 'bold',
-        color: '#1C1C1E',
         marginBottom: 16,
+        marginTop: 16,
     },
     actionRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
     },
     actionButton: {
-        alignItems: 'center',
-        width: (width - 48) / 3,
+        width: (width - 48) / 3 - 5,
+        height: 100, // Fixed height for consistency
+        borderRadius: 16,
+        padding: 0,
     },
-    actionIcon: {
-        width: 64,
-        height: 64,
-        borderRadius: 20,
+    actionButtonContent: {
+        height: 100,
+        flexDirection: 'column',
         justifyContent: 'center',
-        alignItems: 'center',
+    },
+    alertsContainer: {
+        marginTop: 16,
+    },
+    alertCard: {
         marginBottom: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 3,
-    },
-    actionText: {
-        fontSize: 12,
-        color: '#1C1C1E',
-        fontWeight: '600',
-    },
+    }
 });
 
 export default OwnerDashboard;

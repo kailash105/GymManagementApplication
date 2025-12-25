@@ -1,5 +1,6 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, StyleSheet, Alert } from 'react-native';
+import { TextInput, Button, Text } from 'react-native-paper';
 import { AuthContext } from '../../context/AuthContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -24,12 +25,13 @@ const LoginScreen = () => {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.content}>
-                <Text style={styles.title}>Gym Manager</Text>
-                <Text style={styles.subtitle}>Sign in to continue</Text>
+                <Text style={styles.title} variant="headlineMedium">Gym Manager</Text>
+                <Text style={styles.subtitle} variant="bodyLarge">Sign in to continue</Text>
 
                 <View style={styles.form}>
-                    <Text style={styles.label}>Email Address</Text>
                     <TextInput
+                        label="Email Address"
+                        mode="outlined"
                         style={styles.input}
                         placeholder="owner@gym.com"
                         autoCapitalize="none"
@@ -38,8 +40,9 @@ const LoginScreen = () => {
                         onChangeText={setEmail}
                     />
 
-                    <Text style={styles.label}>Password</Text>
                     <TextInput
+                        label="Password"
+                        mode="outlined"
                         style={styles.input}
                         placeholder="Password"
                         secureTextEntry
@@ -47,20 +50,19 @@ const LoginScreen = () => {
                         onChangeText={setPassword}
                     />
 
-                    <TouchableOpacity
+                    <Button
+                        mode="contained"
                         style={styles.button}
+                        contentStyle={styles.buttonContent}
                         onPress={handleLogin}
+                        loading={isLoading}
                         disabled={isLoading}
                     >
-                        {isLoading ? (
-                            <ActivityIndicator color="#fff" />
-                        ) : (
-                            <Text style={styles.buttonText}>Login</Text>
-                        )}
-                    </TouchableOpacity>
+                        Login
+                    </Button>
 
                     <View style={styles.helper}>
-                        <Text style={styles.helperText}>Try: owner@gym.com / trainer@gym.com</Text>
+                        <Text style={styles.helperText} variant="bodySmall">Try: owner@gym.com / trainer@gym.com</Text>
                     </View>
                 </View>
             </View>
@@ -79,14 +81,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     title: {
-        fontSize: 32,
         fontWeight: 'bold',
         color: '#333',
         marginBottom: 8,
         textAlign: 'center',
     },
     subtitle: {
-        fontSize: 16,
         color: '#666',
         textAlign: 'center',
         marginBottom: 48,
@@ -94,32 +94,15 @@ const styles = StyleSheet.create({
     form: {
         width: '100%',
     },
-    label: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#333',
-        marginBottom: 8,
-    },
     input: {
-        backgroundColor: '#f5f5f5',
-        borderRadius: 8,
-        padding: 16,
-        fontSize: 16,
-        marginBottom: 24,
-        borderWidth: 1,
-        borderColor: '#e0e0e0',
+        marginBottom: 16,
     },
     button: {
-        backgroundColor: '#007AFF',
-        borderRadius: 8,
-        padding: 16,
-        alignItems: 'center',
         marginTop: 8,
+        borderRadius: 8,
     },
-    buttonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
+    buttonContent: {
+        paddingVertical: 8,
     },
     helper: {
         marginTop: 24,
@@ -127,7 +110,6 @@ const styles = StyleSheet.create({
     },
     helperText: {
         color: '#999',
-        fontSize: 12,
     },
 });
 

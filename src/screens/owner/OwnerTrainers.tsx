@@ -1,11 +1,14 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, FlatList, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { User } from '../../types';
 import client from '../../api/client';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { Text, List, Avatar, FAB, useTheme, Divider, ActivityIndicator, IconButton } from 'react-native-paper';
 
 const OwnerTrainers = () => {
+    const navigation = useNavigation<any>();
+    const theme = useTheme();
     const [trainers, setTrainers] = useState<User[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -29,31 +32,50 @@ const OwnerTrainers = () => {
     );
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <View style={styles.header}>
-                <Text style={styles.title}>Trainers</Text>
-                <TouchableOpacity style={styles.addButton}>
-                    <Text style={styles.addButtonText}>+ Add Trainer</Text>
-                </TouchableOpacity>
+                <Text variant="headlineMedium" style={styles.title}>Trainers</Text>
             </View>
 
             {isLoading ? (
-                <ActivityIndicator size="large" style={{ marginTop: 20 }} />
+                <View style={styles.center}>
+                    <ActivityIndicator size="large" />
+                </View>
             ) : (
                 <FlatList
                     data={trainers}
                     keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => (
-                        <View style={styles.card}>
-                            <Text style={styles.name}>{item.name}</Text>
-                            <Text style={styles.email}>{item.email}</Text>
-                            <Text style={styles.subtext}>Active</Text>
+                    ItemSeparatorComponent={() => <Divider />}
+                    ListEmptyComponent={
+                        <View style={styles.center}>
+                            <Text variant="bodyLarge" style={{ color: theme.colors.outline }}>No trainers found.</Text>
                         </View>
+                    }
+                    renderItem={({ item }) => (
+                        <List.Item
+                            title={item.name}
+                            description={item.email}
+                            left={(props) => <Avatar.Icon {...props} icon="dumbbell" style={{ backgroundColor: theme.colors.secondaryContainer }} />}
+                            right={(props) => (
+                                <IconButton
+                                    {...props}
+                                    icon="delete"
+                                    iconColor={theme.colors.error}
+                                    onPress={() => { }} // Delete Logic here
+                                />
+                            )}
+                        />
                     )}
                     contentContainerStyle={styles.list}
-                    ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 20, color: '#666' }}>No trainers found.</Text>}
                 />
             )}
+            <FAB
+                icon="plus"
+                style={[styles.fab, { backgroundColor: theme.colors.primary }]}
+                color={theme.colors.onPrimary}
+                onPress={() => { }} // Navigate to Add Trainer
+                label="Add Trainer"
+            />
         </SafeAreaView>
     );
 };
@@ -61,53 +83,27 @@ const OwnerTrainers = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+    },
+    center: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
     },
     header: {
         padding: 16,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
     },
     title: {
-        fontSize: 24,
         fontWeight: 'bold',
-    },
-    addButton: {
-        backgroundColor: '#007AFF',
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
-    },
-    addButtonText: {
-        color: '#fff',
-        fontWeight: '600',
     },
     list: {
-        padding: 16,
+        paddingBottom: 80,
     },
-    card: {
-        padding: 16,
-        backgroundColor: '#f0f4f8',
-        borderRadius: 8,
-        marginBottom: 12,
-    },
-    name: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 4,
-    },
-    email: {
-        fontSize: 14,
-        color: '#666',
-    },
-    subtext: {
-        marginTop: 8,
-        fontSize: 12,
-        color: 'green',
-        fontWeight: 'bold',
+    fab: {
+        position: 'absolute',
+        margin: 16,
+        right: 0,
+        bottom: 0,
     },
 });
 

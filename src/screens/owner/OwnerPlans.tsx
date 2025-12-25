@@ -1,11 +1,13 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, FlatList, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SubscriptionPlan } from '../../types';
 import client from '../../api/client';
 import { useFocusEffect } from '@react-navigation/native';
+import { Text, Card, FAB, Button, useTheme, ActivityIndicator, IconButton } from 'react-native-paper';
 
 const OwnerPlans = () => {
+    const theme = useTheme();
     const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -29,29 +31,49 @@ const OwnerPlans = () => {
     );
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <View style={styles.header}>
-                <Text style={styles.title}>Subscription Plans</Text>
+                <Text variant="headlineMedium" style={styles.title}>Subscription Plans</Text>
             </View>
+
             {isLoading ? (
-                <ActivityIndicator size="large" style={{ marginTop: 20 }} />
+                <View style={styles.center}>
+                    <ActivityIndicator size="large" />
+                </View>
             ) : (
                 <FlatList
                     data={plans}
                     keyExtractor={(item) => item.id}
                     renderItem={({ item }) => (
-                        <View style={styles.card}>
-                            <View>
-                                <Text style={styles.planName}>{item.name}</Text>
-                                <Text style={styles.planDuration}>{item.duration} Months</Text>
-                            </View>
-                            <Text style={styles.price}>${item.price}</Text>
-                        </View>
+                        <Card style={styles.card} mode="elevated">
+                            <Card.Content style={styles.cardContent}>
+                                <View>
+                                    <Text variant="titleLarge" style={{ fontWeight: 'bold' }}>{item.name}</Text>
+                                    <Text variant="bodyMedium" style={{ color: theme.colors.outline }}>{item.duration} Months</Text>
+                                </View>
+                                <Text variant="headlineMedium" style={{ color: theme.colors.primary, fontWeight: 'bold' }}>${item.price}</Text>
+                            </Card.Content>
+                            <Card.Actions>
+                                <Button onPress={() => { }}>Edit</Button>
+                                <Button textColor={theme.colors.error} onPress={() => { }}>Delete</Button>
+                            </Card.Actions>
+                        </Card>
                     )}
                     contentContainerStyle={styles.list}
-                    ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 20, color: '#666' }}>No plans found.</Text>}
+                    ListEmptyComponent={
+                        <View style={styles.center}>
+                            <Text variant="bodyLarge" style={{ color: theme.colors.outline }}>No plans found.</Text>
+                        </View>
+                    }
                 />
             )}
+            <FAB
+                icon="plus"
+                style={[styles.fab, { backgroundColor: theme.colors.primary }]}
+                color={theme.colors.onPrimary}
+                onPress={() => { }} // Navigate to Add Plan later
+                label="Add Plan"
+            />
         </SafeAreaView>
     );
 };
@@ -59,44 +81,37 @@ const OwnerPlans = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+    },
+    center: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
     },
     header: {
         padding: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
     },
     title: {
-        fontSize: 24,
         fontWeight: 'bold',
     },
     list: {
         padding: 16,
+        paddingBottom: 80,
     },
     card: {
+        marginBottom: 16,
+    },
+    cardContent: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 16,
-        backgroundColor: '#fff',
-        borderRadius: 8,
-        marginBottom: 12,
-        borderWidth: 1,
-        borderColor: '#eee',
+        marginBottom: 8,
     },
-    planName: {
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    planDuration: {
-        fontSize: 14,
-        color: '#666',
-        marginTop: 4,
-    },
-    price: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#007AFF',
+    fab: {
+        position: 'absolute',
+        margin: 16,
+        right: 0,
+        bottom: 0,
     },
 });
 

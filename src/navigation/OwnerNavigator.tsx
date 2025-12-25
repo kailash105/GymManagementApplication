@@ -8,6 +8,8 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AddMemberScreen from '../screens/owner/AddMemberScreen';
+import AddTrainerScreen from '../screens/owner/AddTrainerScreen';
+import ReportsScreen from '../screens/owner/ReportsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -17,6 +19,24 @@ const MemberStack = () => {
         <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="OwnerMembersList" component={OwnerMembers} />
             <Stack.Screen name="AddMember" component={AddMemberScreen} />
+        </Stack.Navigator>
+    );
+};
+
+const TrainerStack = () => {
+    return (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="OwnerTrainersList" component={OwnerTrainers} />
+            <Stack.Screen name="AddTrainer" component={AddTrainerScreen} />
+        </Stack.Navigator>
+    );
+};
+
+const DashboardStack = () => {
+    return (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="OwnerDashboardHome" component={OwnerDashboard} />
+            <Stack.Screen name="Reports" component={ReportsScreen} />
         </Stack.Navigator>
     );
 };
@@ -35,12 +55,14 @@ const OwnerNavigator = () => {
 
                     return <Ionicons name={iconName} size={size} color={color} />;
                 },
+                tabBarActiveTintColor: '#6200ee',
+                tabBarInactiveTintColor: 'gray',
             })}
         >
-            <Tab.Screen name="Dashboard" component={OwnerDashboard} />
-            <Tab.Screen name="Members" component={MemberStack} />
-            <Tab.Screen name="Trainers" component={OwnerTrainers} />
-            <Tab.Screen name="Plans" component={OwnerPlans} />
+            <Tab.Screen name="Dashboard" component={DashboardStack} options={{ headerShown: false }} />
+            <Tab.Screen name="Members" component={MemberStack} options={{ headerShown: false }} />
+            <Tab.Screen name="Trainers" component={TrainerStack} options={{ headerShown: false }} />
+            <Tab.Screen name="Plans" component={OwnerPlans} options={{ headerShown: false }} />
         </Tab.Navigator>
     );
 };

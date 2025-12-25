@@ -1,21 +1,26 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, FlatList, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { User } from '../../types';
 import client from '../../api/client';
+import { Text, List, Avatar, FAB, Searchbar, useTheme, IconButton, Divider, ActivityIndicator } from 'react-native-paper';
 
 const OwnerMembers = () => {
     const navigation = useNavigation<any>();
+    const theme = useTheme();
     const [members, setMembers] = useState<User[]>([]);
+    const [filteredMembers, setFilteredMembers] = useState<User[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
     const loadMembers = async () => {
         setIsLoading(true);
         try {
             const res = await client.get('/users');
-            // Filter only members
-            setMembers(res.data.filter((u: User) => u.role === 'MEMBER'));
+            const memberList = res.data.filter((u: User) => u.role === 'MEMBER');
+            setMembers(memberList);
+            setFilteredMembers(memberList);
         } catch (error) {
             console.error(error);
             Alert.alert('Error', 'Failed to load members');
@@ -29,6 +34,20 @@ const OwnerMembers = () => {
             loadMembers();
         }, [])
     );
+
+    const onChangeSearch = (query: string) => {
+        setSearchQuery(query);
+        if (query) {
+            const filtered = members.filter(
+                (member) =>
+                    member.name.toLowerCase().includes(query.toLowerCase()) ||
+                    member.email.toLowerCase().includes(query.toLowerCase())
+            );
+            setFilteredMembers(filtered);
+        } else {
+            setFilteredMembers(members);
+        }
+    };
 
     const handleDelete = (id: string) => {
         Alert.alert('Confirm Delete', 'Are you sure you want to delete this member?', [
@@ -49,15 +68,19 @@ const OwnerMembers = () => {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <View style={styles.header}>
-                <Text style={styles.title}>Members</Text>
-                <TouchableOpacity
-                    style={styles.addButton}
-                    onPress={() => navigation.navigate('AddMember')}
-                >
-                    <Text style={styles.addButtonText}>+ Add Member</Text>
-                </TouchableOpacity>
+                <Text variant="headlineMedium" style={styles.title}>Members</Text>
+            </View>
+
+            <View style={styles.searchContainer}>
+                <Searchbar
+                    placeholder="Search by name or email"
+                    onChangeText={onChangeSearch}
+                    value={searchQuery}
+                    mode="bar"
+                    style={styles.searchBar}
+                />
             </View>
 
             {isLoading ? (
@@ -66,27 +89,43 @@ const OwnerMembers = () => {
                 </View>
             ) : (
                 <FlatList
-                    data={members}
+                    data={filteredMembers}
                     keyExtractor={(item) => item.id}
+                    ItemSeparatorComponent={() => <Divider />}
                     ListEmptyComponent={
-                        <Text style={styles.emptyText}>No members found. Add one!</Text>
+                        <View style={styles.center}>
+                            <Text variant="bodyLarge" style={{ color: theme.colors.outline }}>
+                                {searchQuery ? 'No members found matching your search.' : 'No members found. Add one!'}
+                            </Text>
+                        </View>
                     }
                     renderItem={({ item }) => (
-                        <View style={styles.memberCard}>
-                            <View>
-                                <Text style={styles.memberName}>{item.name}</Text>
-                                <Text style={styles.memberEmail}>{item.email}</Text>
-                            </View>
-                            <TouchableOpacity
-                                onPress={() => handleDelete(item.id)}
-                            >
-                                <Text style={styles.deleteText}>Delete</Text>
-                            </TouchableOpacity>
-                        </View>
+                        <List.Item
+                            title={item.name}
+                            description={item.email}
+                            left={(props) => <Avatar.Text {...props} size={40} label={item.name.substring(0, 2).toUpperCase()} />}
+                            right={(props) => (
+                                <IconButton
+                                    {...props}
+                                    icon="delete"
+                                    iconColor={theme.colors.error}
+                                    onPress={() => handleDelete(item.id)}
+                                />
+                            )}
+                            onPress={() => { }} // Could navigate to details later
+                        />
                     )}
                     contentContainerStyle={styles.list}
                 />
             )}
+
+            <FAB
+                icon="plus"
+                style={[styles.fab, { backgroundColor: theme.colors.primary }]}
+                color={theme.colors.onPrimary}
+                onPress={() => navigation.navigate('AddMember')}
+                label="Add Member"
+            />
         </SafeAreaView>
     );
 };
@@ -94,64 +133,36 @@ const OwnerMembers = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
     },
     center: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        padding: 20,
     },
     header: {
-        padding: 16,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
+        paddingHorizontal: 16,
+        paddingTop: 16,
+        paddingBottom: 8,
     },
     title: {
-        fontSize: 24,
         fontWeight: 'bold',
     },
-    addButton: {
-        backgroundColor: '#007AFF',
+    searchContainer: {
         paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
+        marginBottom: 8,
     },
-    addButtonText: {
-        color: '#fff',
-        fontWeight: '600',
+    searchBar: {
+        elevation: 2,
     },
     list: {
-        padding: 16,
+        paddingBottom: 80, // Space for FAB
     },
-    memberCard: {
-        padding: 16,
-        backgroundColor: '#f8f9fa',
-        borderRadius: 8,
-        marginBottom: 12,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    memberName: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 4,
-    },
-    memberEmail: {
-        fontSize: 14,
-        color: '#666',
-    },
-    deleteText: {
-        color: 'red',
-        fontWeight: '600',
-    },
-    emptyText: {
-        textAlign: 'center',
-        marginTop: 24,
-        color: '#999',
+    fab: {
+        position: 'absolute',
+        margin: 16,
+        right: 0,
+        bottom: 0,
     },
 });
 
